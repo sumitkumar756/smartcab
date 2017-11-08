@@ -6,7 +6,7 @@ public class GPS {
 
 	private final double earthRadius = 6371; // in km
 	
-	public double getdistanceBetweenTwoGPS(Person cabDriver, Person traveler) {
+	public double getdistanceBetweenTwoGPS(Person traveler, Person cabDriver) {
 		Double latDistance = toRad(traveler.getLatitude() - cabDriver.getLatitude());
 		Double lonDistance = toRad(traveler.getLongitude() - cabDriver.getLongitude());
 		Double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2) + Math.cos(toRad(cabDriver.getLatitude()))

@@ -22,7 +22,7 @@
 				<tr>
 					<td>Mobile:</td>
 					<td><input type="text" name="number" width="13"
-						placeholder="+91" /><br /></td>
+						placeholder="+91 with 10 digit" /><br /></td>
 				</tr>
 				<tr>
 					<td>Login As:</td>

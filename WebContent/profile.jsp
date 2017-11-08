@@ -50,25 +50,43 @@
 			<%
 				Person person = (Person) request.getSession(false).getAttribute("person");
 				if (person instanceof Driver) {
+					boolean isDriverOnline = Bookings.getSingletonInstance().getAvailableDrivers()
+							.contains((Driver) person);
+					boolean isDriverOnTrip = BookingUtility.isDriverOnTrip(person);
+					if (!isDriverOnline) {
 			%>
-			<input type="submit" name="submit" value="Search for Traveler" />
-			<br />
+			<input type="submit" name="submit"
+				value="Let's go online for bookings" /><br> <br>
 			<%
+				}
+					if (isDriverOnline && !isDriverOnTrip) {
+			%>
+			<input type="submit" name="submit" value="Search for Traveler" /><br>
+			<br>
+			<%
+				}
+					if (isDriverOnline && isDriverOnTrip) {
+			%>
+			<textarea rows="2" cols="500"><%=BookingUtility.checkStatusOfBooking(person)%></textarea>
+			<%
+				}
+
 				} else {
-					String confimationMessage = BookingUtility.checkExisitingConfirmedBooking(person);
+					String confimationMessage = BookingUtility.checkStatusOfBooking(person);
 					if (confimationMessage != null) {
 			%>
-			<textarea rows="2" cols="100"><%=confimationMessage%></textarea>
+			<textarea rows="2" cols="500"><%=confimationMessage%></textarea>
 			<%
 				} else {
 			%>
-			<input type="submit" name="submit" value="Book a CAB" />
+			<input type="text" name="distance" width="3"
+				placeholder="under 1000 km"> <input type="submit"
+				name="submit" value="Request for CAB" />
 			<%
 				}
 				}
 			%>
-			<br /> <br />
-			<input type="submit" name="submit" value="logout" />
+			<br /> <br /> <input type="submit" name="submit" value="logout" />
 
 		</form>
 	</div>

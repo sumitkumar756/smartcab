@@ -34,57 +34,70 @@ public class SmartCabBooking extends HttpServlet {
 			person.setLatitude(Double.parseDouble(request.getParameter("latitude")));
 			person.setLongitude(Double.parseDouble(request.getParameter("longitude")));
 			if (person instanceof Traveler) {
-				Booking newBooking = new Booking();
-				newBooking.setFare(Math.random());
-				newBooking.setTraveler((Traveler) person);
-				Bookings.getSingletonInstance().bookings.add(newBooking);
-				System.out.println("requested for booking :" + newBooking);
-				request.setAttribute("message", "CAB requested for booking id :" + newBooking.getUuid().toString()
-						+ " wait for driver to confirm the booking");
-			} else {
-				if (Bookings.getSingletonInstance().bookings.isEmpty()) {
-					request.setAttribute("message",
-							"No booked trip available from travelers right now waiting for new booking try later");
-				} else {
+
+				if (Bookings.getSingletonInstance().availableDrivers.size() > 0) {
+
 					GPS gps = new GPS();
-					
-				// java-8 code to find the traveler in range of 2 km and with max trip fare	
-					Booking servingBooking = Bookings.getSingletonInstance().bookings.parallelStream().filter(booking -> gps.getdistanceBetweenTwoGPS(person,booking.getTraveler()) <= 2
-							&& !booking.isConfirmed()
-							).max(Comparator.comparingDouble(booking -> booking.getFare())).orElse(null);
-					
-						
-				  // java-7 code to find the traveler in range of 2 km and with max trip fare
-				  /*	Booking servingBooking = null;
-					    double maxFare = Double.MIN_VALUE;
-					
-				        for (Booking booking : Bookings.getSingletonInstance().bookings) {
-						System.out.println("distance in km :" + gps.getdistanceBetweenTwoGPS(person, booking.getTraveler()));
-						
-						// code to get the all bookings from travelers in range of 2 km with max fare
-						double distanceToTraveler = gps.getdistanceBetweenTwoGPS(person, booking.getTraveler());
-						if (2 >= distanceToTraveler && maxFare < booking.getFare()) {
-							maxFare = booking.getFare();
-							servingBooking = booking;
-						}
+					Driver availableDriver = Bookings.getSingletonInstance().availableDrivers.parallelStream()
+							.filter(driver -> gps.getdistanceBetweenTwoGPS(person, driver) <= 2).findAny().orElse(null);
+
+					if (availableDriver != null) {
+
+						Booking newBooking = new Booking();
+						double distance = Double.parseDouble(request.getParameter("distance"));
+						newBooking.setFare(14*distance);
+						newBooking.setTraveler((Traveler) person);
+						Bookings.getSingletonInstance().availablebookings.add(newBooking);
+						System.out.println("Requested for booking :" + newBooking);
+						request.setAttribute("message", "CAB requested for booking id :"
+								+ newBooking.getUuid().toString() + " wait for driver to confirm the booking");
+					} else {
+						request.setAttribute("message", "No CAB available in range of 2 km !!");
 					}
-				  */	
-					if(servingBooking != null){
-						System.out.println("confirmed booking :"+servingBooking);
-						request.setAttribute("message", "Booking id : "+servingBooking.getUuid()+" confirmed for traveler :" + servingBooking.getTraveler());
-						Bookings.getSingletonInstance().setBookings(Bookings.getSingletonInstance().bookings.parallelStream().map(booking -> {
-							if(booking.getUuid().toString().equals(servingBooking.getUuid().toString())){
-								booking.setConfirmed(true);
-								booking.setDriver((Driver) person);
-							}
-							return booking;
-						}).collect(Collectors.toList()));
-					}else{
-						request.setAttribute("message", "No booked trip available within 2 km range from travelers right now");
-					}
-					
-					
+				} else {
+					request.setAttribute("message", "No CAB available right now !!");
 				}
+			} else {
+				if (request.getParameter("submit").contains("go online for bookings")) {
+					Bookings.getSingletonInstance().availableDrivers.add((Driver) person);
+					request.setAttribute("message",
+							"Hi " + person.getName() + " travelers are waiting for you. find traveler");
+				} else {
+
+					if (Bookings.getSingletonInstance().availablebookings.isEmpty()) {
+						request.setAttribute("message",
+								"No booked trip available from travelers right now waiting for new booking");
+					} else {
+						GPS gps = new GPS();
+
+						// java-8 code to find the traveler in range of 2 km and
+						// with max trip fare
+						Booking servingBooking = Bookings.getSingletonInstance().availablebookings.parallelStream()
+								.filter(booking -> !booking.isConfirmed())
+								.max(Comparator.comparingDouble(booking -> booking.getFare())).orElse(null);
+
+						if (servingBooking != null) {
+							System.out.println("confirmed booking :" + servingBooking);
+							request.setAttribute("message", "Booking id : " + servingBooking.getUuid()
+									+ " confirmed for traveler :" + servingBooking.getTraveler());
+							Bookings.getSingletonInstance().setBookings(
+									Bookings.getSingletonInstance().availablebookings.parallelStream().filter(booking -> !booking.isConfirmed())
+									.map(booking -> {
+										if (booking.getUuid().toString().equals(servingBooking.getUuid().toString())) {
+											booking.setConfirmed(true);
+											booking.setDriver((Driver) person);
+										}
+										return booking;
+									}).collect(Collectors.toList()));
+						} else {
+							request.setAttribute("message",
+									"No booked trip available from travelers right now waiting for new booking");
+						}
+
+					}
+
+				}
+
 			}
 			request.getRequestDispatcher("profile.jsp").forward(request, response);
 		} else {
