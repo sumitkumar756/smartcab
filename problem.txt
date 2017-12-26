@@ -1,0 +1,9 @@
+Problem Statement:
+Create a simple web application that lets users request for a cab ride.
+
+Conditions:
+
+The system should match the location of cab ride requester with  available cabs within a range 2 Kms and notify the cab ride requester once a cab driver accepts the ride request. 
+A cab driver cannot accept more than one ride at a time [no sharing].
+A cab driver should pick a ride that pays him the most [ i.e., a ride that is longest] 
+The ride requester should get a confirmation message with the cab number and driver contact details.
